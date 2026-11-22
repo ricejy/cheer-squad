@@ -4,6 +4,7 @@ import type { EngineInterface, Register, ThemeSetArgs } from 'claude-code'
 import type { Crowd } from '../types'
 
 import { makeColors } from './make-colors.js'
+import { register as tokenWeather, weatherSessionMeasure, weatherSessionStart, weatherTurnComplete } from './token-weather.mjs'
 
 // Milky rice paper by day, a dark earthenware jar by night, celadon glaze for the accent.
 const { theme, problems } = makeColors({
@@ -289,7 +290,17 @@ async function setWorking($: EngineInterface, isWorking: boolean): Promise<void>
   }
 }
 
-export const register: Register = on => {
+// The original Token Weather Usage plugin's row, hidden: this mod draws its own,
+// trimmed to the context, 5-hour and 7-day pills.
+const HIDDEN_ROWS = ['token-weather-usage']
+
+export const register: Register = (on, options) => {
+  tokenWeather(on, options)
+
+  on('ui.render', { component: 'AbovePromptList' }, async ($, e, next) =>
+    next({ ...e, props: { ...e.props, rows: e.props.rows.filter(row => !HIDDEN_ROWS.includes(row.plugin)) } }),
+  )
+
   on('session.start', async ($, e, next) => {
     const unpainted = problems.find(text => text.startsWith("Desktop won't paint"))
 
@@ -300,7 +311,7 @@ export const register: Register = on => {
     // Where no surface draws the look (a terminal), it is simply not shown.
     await $.theme.set(LOOK)
 
-    return next(e)
+    return weatherSessionStart($, e, next)
   })
 
   on('turn.start', async ($, e, next) => {
@@ -315,7 +326,7 @@ export const register: Register = on => {
   })
 
   on('turn.complete', async ($, e, next) => {
-    const answer = await next(e)
+    const answer = await weatherTurnComplete($, e, next)
 
     if (e.agentId === undefined) {
       await setWorking($, false)
@@ -323,6 +334,9 @@ export const register: Register = on => {
 
     return answer
   })
+
+  // The token weather row's usage readings.
+  on('session.measure', async ($, e, next) => weatherSessionMeasure($, e, next))
 
   on('ui.render', { component: 'Backdrop' }, async ($, e, next) => {
     // Draw for whichever surface asks, so long as it can draw an Svg.
