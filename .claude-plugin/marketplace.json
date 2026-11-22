@@ -1,0 +1,5 @@
+{
+  "name": "ricejy-cheer-squad",
+  "owner": { "name": "ricejy" },
+  "plugins": [{ "name": "cheer-squad", "source": "./" }]
+}

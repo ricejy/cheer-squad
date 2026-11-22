@@ -1,0 +1,11 @@
+{
+  "name": "cheer-squad",
+  "version": "1.0.0",
+  "description": "A rice-wine look with a squad of costumed stickmen who line up down both sides of the chat and cheer while Claude works.",
+  "author": {
+    "name": "ricejy"
+  },
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "repository": "https://github.com/ricejy/cheer-squad"
+}
